@@ -1,5 +1,71 @@
-import path from 'node:path'; import fs from 'node:fs/promises'; import { CodeHarnessError } from '../utils/errors.js';
-export const excludedNames = new Set(['.env', '.env.local', '.env.production', 'credentials.json', '.npmrc', '.pypirc', 'id_rsa', 'id_ed25519', '.codeharness']);
-export function isExcluded(relative: string): boolean { return relative.split(path.sep).some((p) => p === '.git' || p === 'node_modules' || p === 'dist' || p === 'build' || p === 'coverage' || p.startsWith('.env') || /^(?:credentials?|secrets?|id_(?:rsa|dsa|ecdsa|ed25519))(?:[.\-_].*)?$/i.test(p) || /\.(?:pem|key|p12|pfx|kdbx)$/i.test(p) || excludedNames.has(p)); }
-export function safeRelative(root: string, requested: string): string { if (path.isAbsolute(requested)) throw new CodeHarnessError('Absolute paths are not allowed.', 'PATH_OUTSIDE_ROOT'); const relative = path.normalize(requested); const target = path.resolve(root, relative); const base = path.resolve(root); if (target !== base && !target.startsWith(`${base}${path.sep}`)) throw new CodeHarnessError('Path traversal outside the repository is not allowed.', 'PATH_OUTSIDE_ROOT'); if (isExcluded(relative)) throw new CodeHarnessError('This path is excluded because it may contain secrets or generated data.', 'PATH_EXCLUDED'); return relative; }
-export async function regularFile(root: string, relative: string): Promise<string> { const realRoot = await fs.realpath(root); const real = await fs.realpath(path.resolve(root, relative)); if (real !== realRoot && !real.startsWith(`${realRoot}${path.sep}`)) throw new CodeHarnessError('Symbolic links outside the repository are not allowed.', 'PATH_OUTSIDE_ROOT'); if (!(await fs.stat(real)).isFile()) throw new CodeHarnessError('The requested path is not a regular file.', 'NOT_A_FILE'); return real; }
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { CodeHarnessError } from '../utils/errors.js';
+export const excludedNames = new Set([
+  '.env',
+  '.env.local',
+  '.env.production',
+  'credentials.json',
+  '.npmrc',
+  '.pypirc',
+  'id_rsa',
+  'id_ed25519',
+  '.codeharness',
+]);
+export function isExcluded(relative: string): boolean {
+  return relative
+    .split(path.sep)
+    .some(
+      (p) =>
+        p === '.git' ||
+        p === 'node_modules' ||
+        p === 'dist' ||
+        p === 'build' ||
+        p === 'coverage' ||
+        p.startsWith('.env') ||
+        /^(?:credentials?|secrets?|id_(?:rsa|dsa|ecdsa|ed25519))(?:[.\-_].*)?$/i.test(
+          p,
+        ) ||
+        /\.(?:pem|key|p12|pfx|kdbx)$/i.test(p) ||
+        excludedNames.has(p),
+    );
+}
+export function safeRelative(root: string, requested: string): string {
+  if (path.isAbsolute(requested))
+    throw new CodeHarnessError(
+      'Absolute paths are not allowed.',
+      'PATH_OUTSIDE_ROOT',
+    );
+  const relative = path.normalize(requested);
+  const target = path.resolve(root, relative);
+  const base = path.resolve(root);
+  if (target !== base && !target.startsWith(`${base}${path.sep}`))
+    throw new CodeHarnessError(
+      'Path traversal outside the repository is not allowed.',
+      'PATH_OUTSIDE_ROOT',
+    );
+  if (isExcluded(relative))
+    throw new CodeHarnessError(
+      'This path is excluded because it may contain secrets or generated data.',
+      'PATH_EXCLUDED',
+    );
+  return relative;
+}
+export async function regularFile(
+  root: string,
+  relative: string,
+): Promise<string> {
+  const realRoot = await fs.realpath(root);
+  const real = await fs.realpath(path.resolve(root, relative));
+  if (real !== realRoot && !real.startsWith(`${realRoot}${path.sep}`))
+    throw new CodeHarnessError(
+      'Symbolic links outside the repository are not allowed.',
+      'PATH_OUTSIDE_ROOT',
+    );
+  if (!(await fs.stat(real)).isFile())
+    throw new CodeHarnessError(
+      'The requested path is not a regular file.',
+      'NOT_A_FILE',
+    );
+  return real;
+}

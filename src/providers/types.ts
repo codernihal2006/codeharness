@@ -1,1 +1,27 @@
-export type ToolDeclaration = { name: string; description: string; parameters: Record<string, unknown> }; export type ToolCall = { id: string; name: string; args: Record<string, unknown> }; export type ProviderResponse = { text?: string; toolCalls: ToolCall[]; raw?: unknown; usage?: { input?: number; output?: number } }; export interface LlmProvider { readonly name: string; generate(input: { system: string; contents: unknown[]; tools: ToolDeclaration[]; model: string; signal?: AbortSignal }): Promise<ProviderResponse>; validateModel(model: string): Promise<boolean>; }
+export type ToolDeclaration = {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+};
+export type ToolCall = {
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+};
+export type ProviderResponse = {
+  text?: string;
+  toolCalls: ToolCall[];
+  raw?: unknown;
+  usage?: { input?: number; output?: number };
+};
+export interface LlmProvider {
+  readonly name: string;
+  generate(input: {
+    system: string;
+    contents: unknown[];
+    tools: ToolDeclaration[];
+    model: string;
+    signal?: AbortSignal;
+  }): Promise<ProviderResponse>;
+  validateModel(model: string): Promise<boolean>;
+}

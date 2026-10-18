@@ -1,7 +1,43 @@
-import os from 'node:os'; import path from 'node:path'; import fs from 'node:fs/promises'; import { z } from 'zod'; import { CodeHarnessError } from '../utils/errors.js';
-const schema = z.object({ version: z.number(), provider: z.string().optional(), model: z.string().optional() }); export type Config = z.infer<typeof schema>;
-export function configDir(): string { return process.env.CODEHARNESS_CONFIG_DIR ?? path.join(os.homedir(), '.config', 'codeharness'); }
-export function configPath(): string { return path.join(configDir(), 'config.json'); }
-export async function loadConfig(): Promise<Config> { try { return schema.parse(JSON.parse(await fs.readFile(configPath(), 'utf8'))); } catch (e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') return { version: 1 }; throw new CodeHarnessError('CodeHarness configuration is missing or corrupted. Remove the config file and try again.', 'CONFIG_INVALID'); } }
-export async function saveConfig(config: Config): Promise<void> { await fs.mkdir(configDir(), { recursive: true, mode: 0o700 }); const temp = `${configPath()}.tmp-${process.pid}`; await fs.writeFile(temp, JSON.stringify(schema.parse(config), null, 2), { mode: 0o600 }); await fs.rename(temp, configPath()); }
-export async function updateConfig(update: Partial<Config>): Promise<Config> { const next = { ...(await loadConfig()), ...update, version: 1 }; return saveConfig(next).then(() => next); }
+import os from 'node:os';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { z } from 'zod';
+import { CodeHarnessError } from '../utils/errors.js';
+const schema = z.object({
+  version: z.number(),
+  provider: z.string().optional(),
+  model: z.string().optional(),
+});
+export type Config = z.infer<typeof schema>;
+export function configDir(): string {
+  return (
+    process.env.CODEHARNESS_CONFIG_DIR ??
+    path.join(os.homedir(), '.config', 'codeharness')
+  );
+}
+export function configPath(): string {
+  return path.join(configDir(), 'config.json');
+}
+export async function loadConfig(): Promise<Config> {
+  try {
+    return schema.parse(JSON.parse(await fs.readFile(configPath(), 'utf8')));
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return { version: 1 };
+    throw new CodeHarnessError(
+      'CodeHarness configuration is missing or corrupted. Remove the config file and try again.',
+      'CONFIG_INVALID',
+    );
+  }
+}
+export async function saveConfig(config: Config): Promise<void> {
+  await fs.mkdir(configDir(), { recursive: true, mode: 0o700 });
+  const temp = `${configPath()}.tmp-${process.pid}`;
+  await fs.writeFile(temp, JSON.stringify(schema.parse(config), null, 2), {
+    mode: 0o600,
+  });
+  await fs.rename(temp, configPath());
+}
+export async function updateConfig(update: Partial<Config>): Promise<Config> {
+  const next = { ...(await loadConfig()), ...update, version: 1 };
+  return saveConfig(next).then(() => next);
+}
