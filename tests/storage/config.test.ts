@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { saveConfig, loadConfig } from '../../src/storage/config.js';
+
 describe('config', () => {
   beforeEach(async () => {
     process.env.CODEHARNESS_CONFIG_DIR = await fs.mkdtemp(

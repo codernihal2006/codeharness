@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { z } from 'zod';
 import { CodeHarnessError } from '../utils/errors.js';
+
 const schema = z.object({
   version: z.number(),
   provider: z.string().optional(),
@@ -22,7 +23,9 @@ export async function loadConfig(): Promise<Config> {
   try {
     return schema.parse(JSON.parse(await fs.readFile(configPath(), 'utf8')));
   } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return { version: 1 };
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+      return { version: 1 };
+    }
     throw new CodeHarnessError(
       'CodeHarness configuration is missing or corrupted. Remove the config file and try again.',
       'CONFIG_INVALID',

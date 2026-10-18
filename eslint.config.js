@@ -10,6 +10,7 @@ export default [
       semi: ['error', 'always'],
       quotes: ['error', 'single'],
       '@typescript-eslint/no-explicit-any': 'off',
+      curly: ['error', 'all'],
     },
   },
 ];

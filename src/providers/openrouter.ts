@@ -11,7 +11,7 @@ type OpenRouterModel = {
 function toMessages(contents: unknown[]): unknown[] {
   return contents.flatMap((entry: any) => {
     const parts = entry.parts ?? [];
-    if (entry.role === 'model')
+    if (entry.role === 'model') {
       return [
         {
           role: 'assistant',
@@ -27,22 +27,25 @@ function toMessages(contents: unknown[]): unknown[] {
             })),
         },
       ];
+    }
     const messages: unknown[] = [];
     const text = parts
       .filter((p: any) => p.text)
       .map((p: any) => p.text)
       .join('\n');
-    if (text)
+    if (text) {
       messages.push({
         role: entry.role === 'model' ? 'assistant' : 'user',
         content: text,
       });
-    for (const part of parts.filter((p: any) => p.functionResponse))
+    }
+    for (const part of parts.filter((p: any) => p.functionResponse)) {
       messages.push({
         role: 'tool',
         tool_call_id: part.functionResponse.id ?? part.functionResponse.name,
         content: JSON.stringify(part.functionResponse.response ?? {}),
       });
+    }
     return messages;
   });
 }
@@ -51,11 +54,12 @@ export async function fetchOpenRouterModels(
   fetcher: typeof fetch = fetch,
 ): Promise<OpenRouterModel[]> {
   const response = await fetcher('https://openrouter.ai/api/v1/models');
-  if (!response.ok)
+  if (!response.ok) {
     throw new CodeHarnessError(
       'OpenRouter model catalog is unavailable.',
       'CATALOG_UNAVAILABLE',
     );
+  }
   const data = (await response.json()) as { data?: OpenRouterModel[] };
   return data.data ?? [];
 }
@@ -63,11 +67,12 @@ export async function fetchOpenRouterModels(
 export class OpenRouterProvider implements LlmProvider {
   readonly name = 'openrouter';
   constructor(private readonly apiKey: string) {
-    if (!apiKey)
+    if (!apiKey) {
       throw new CodeHarnessError(
         'OpenRouter API key is missing. Set OPENROUTER_API_KEY or log in first.',
         'MISSING_CREDENTIAL',
       );
+    }
   }
   async validateModel(model: string): Promise<boolean> {
     return model === 'openrouter/free' || model.includes('/');
@@ -111,21 +116,24 @@ export class OpenRouterProvider implements LlmProvider {
       );
       const data = (await response.json().catch(() => ({}))) as any;
       if (!response.ok) {
-        if (response.status === 401 || response.status === 403)
+        if (response.status === 401 || response.status === 403) {
           throw new CodeHarnessError(
             'OpenRouter rejected the credentials.',
             'INVALID_CREDENTIALS',
           );
-        if (response.status === 429)
+        }
+        if (response.status === 429) {
           throw new CodeHarnessError(
             'OpenRouter rate limit or quota exhausted.',
             'RATE_LIMIT',
           );
-        if (response.status === 400)
+        }
+        if (response.status === 400) {
           throw new CodeHarnessError(
             'OpenRouter rejected the request or selected model.',
             'INVALID_REQUEST',
           );
+        }
         throw new CodeHarnessError(
           'OpenRouter request failed.',
           'PROVIDER_ERROR',
@@ -146,9 +154,12 @@ export class OpenRouterProvider implements LlmProvider {
         },
       };
     } catch (error) {
-      if (error instanceof CodeHarnessError) throw error;
-      if (error instanceof Error && error.name === 'AbortError')
+      if (error instanceof CodeHarnessError) {
+        throw error;
+      }
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new CodeHarnessError('OpenRouter request timed out.', 'TIMEOUT');
+      }
       throw new CodeHarnessError(
         'OpenRouter request failed due to a network error.',
         'NETWORK_ERROR',

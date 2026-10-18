@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import { safeRelative, regularFile } from '../security/paths.js';
 import { redactSecrets } from '../security/secrets.js';
 import { CodeHarnessError } from '../utils/errors.js';
+
 export async function readFile(
   root: string,
   input: {
@@ -14,17 +15,19 @@ export async function readFile(
   const rel = safeRelative(root, input.path);
   const file = await regularFile(root, rel);
   const max = input.maxBytes ?? 100_000;
-  if ((await fs.stat(file)).size > max)
+  if ((await fs.stat(file)).size > max) {
     throw new CodeHarnessError(
       `File exceeds the ${max}-byte safety limit.`,
       'FILE_TOO_LARGE',
     );
+  }
   const buf = await fs.readFile(file);
-  if (buf.includes(0))
+  if (buf.includes(0)) {
     throw new CodeHarnessError(
       'Binary files are not readable source evidence.',
       'BINARY_FILE',
     );
+  }
   const lines = buf.toString('utf8').split(/\r?\n/);
   const start = Math.max(1, input.startLine ?? 1);
   const end = Math.min(lines.length, input.endLine ?? lines.length);

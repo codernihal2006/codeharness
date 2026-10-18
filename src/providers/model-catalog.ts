@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { configDir } from '../storage/config.js';
+
 export type Catalog = Record<
   string,
   Array<{ id: string; name?: string; context_length?: number }>
@@ -11,7 +12,9 @@ export async function getCatalog(
 ): Promise<{ catalog: Catalog; stale: boolean }> {
   try {
     const res = await fetcher('https://models.dev/api.json');
-    if (!res.ok) throw new Error('network');
+    if (!res.ok) {
+      throw new Error('network');
+    }
     const raw = (await res.json()) as any;
     const catalog: Catalog = {};
     for (const [provider, value] of Object.entries(raw ?? {})) {
@@ -22,14 +25,17 @@ export async function getCatalog(
             ...(model as any),
             id,
           }));
-      if (entries.length)
+      if (entries.length) {
         catalog[provider] = entries.map((m: any) => ({
           id: String(m.id ?? m.name),
           name: m.name,
           context_length: m.context_length,
         }));
+      }
     }
-    if (catalog.google && !catalog.gemini) catalog.gemini = catalog.google;
+    if (catalog.google && !catalog.gemini) {
+      catalog.gemini = catalog.google;
+    }
     await fs.mkdir(configDir(), { recursive: true, mode: 0o700 });
     await fs.writeFile(
       cache(),

@@ -25,8 +25,12 @@ export async function startChat(repo = process.cwd()): Promise<void> {
   try {
     while (true) {
       const prompt = (await rl.question('codeharness> ')).trim();
-      if (!prompt) continue;
-      if (prompt === '/exit' || prompt === '/quit') break;
+      if (!prompt) {
+        continue;
+      }
+      if (prompt === '/exit' || prompt === '/quit') {
+        break;
+      }
       if (prompt === '/help') {
         console.log(
           'Try: “Explain this project”, “Find security issues”, or “What could crash?”',

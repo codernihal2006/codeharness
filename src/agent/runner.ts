@@ -3,6 +3,7 @@ import { systemPrompt } from './prompts.js';
 import { executeTool, declarations } from '../tools/registry.js';
 import { LlmProvider } from '../providers/types.js';
 import { CodeHarnessError } from '../utils/errors.js';
+
 export async function runAgent(
   provider: LlmProvider,
   root: string,
@@ -28,10 +29,11 @@ export async function runAgent(
         model: options.model,
         signal: controller.signal,
       });
-      if (!response.toolCalls.length)
+      if (!response.toolCalls.length) {
         return (
           response.text ?? 'The provider returned no investigation report.'
         );
+      }
       contents.push({
         role: 'model',
         parts: response.toolCalls.map((c) => ({
@@ -56,8 +58,9 @@ export async function runAgent(
     }
     return 'Investigation incomplete: the maximum agent step limit was reached. Findings are limited to the evidence gathered before the limit.';
   } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError')
+    if (e instanceof Error && e.name === 'AbortError') {
       throw new CodeHarnessError('Investigation timed out.', 'TIMEOUT');
+    }
     throw e;
   } finally {
     clearTimeout(timer);

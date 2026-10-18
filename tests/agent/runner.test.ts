@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { runAgent } from '../../src/agent/runner.js';
+
 describe('agent loop', () => {
   it('executes a tool then returns a report', async () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ch-'));
@@ -13,10 +14,11 @@ describe('agent loop', () => {
       validateModel: async () => true,
       generate: async ({ contents }: any) => {
         n++;
-        if (n === 1)
+        if (n === 1) {
           return {
             toolCalls: [{ id: '1', name: 'read_file', args: { path: 'x.ts' } }],
           };
+        }
         expect(JSON.stringify(contents)).toContain('answer');
         return { text: 'Finding: verified source evidence.', toolCalls: [] };
       },

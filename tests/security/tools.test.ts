@@ -4,6 +4,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { safeRelative } from '../../src/security/paths.js';
 import { readFile } from '../../src/tools/read-file.js';
+
 describe('repository safety', () => {
   it('rejects traversal', () =>
     expect(() => safeRelative('/repo', '../secret')).toThrow());

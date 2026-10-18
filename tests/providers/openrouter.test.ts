@@ -6,31 +6,29 @@ import {
 
 describe('OpenRouter provider', () => {
   it('normalizes structured tool calls and tool results', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            choices: [
-              {
-                message: {
-                  content: 'done',
-                  tool_calls: [
-                    {
-                      id: 'call-1',
-                      function: {
-                        name: 'read_file',
-                        arguments: '{"path":"README.md"}',
-                      },
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: 'done',
+                tool_calls: [
+                  {
+                    id: 'call-1',
+                    function: {
+                      name: 'read_file',
+                      arguments: '{"path":"README.md"}',
                     },
-                  ],
-                },
+                  },
+                ],
               },
-            ],
-          }),
-          { status: 200 },
-        ),
-      );
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
     const provider = new OpenRouterProvider('test-key');
     const response = await provider.generate({
       system: 'safe',
@@ -53,13 +51,11 @@ describe('OpenRouter provider', () => {
     fetchMock.mockRestore();
   });
   it('loads the OpenRouter catalog without an API key', async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(
-        new Response(JSON.stringify({ data: [{ id: 'example/free' }] }), {
-          status: 200,
-        }),
-      );
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ data: [{ id: 'example/free' }] }), {
+        status: 200,
+      }),
+    );
     await expect(fetchOpenRouterModels()).resolves.toEqual([
       { id: 'example/free' },
     ]);

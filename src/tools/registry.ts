@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { listFiles } from './list-files.js';
 import { readFile } from './read-file.js';
 import { searchCode } from './search-code.js';
+
 export const declarations = [
   {
     name: 'list_files',
@@ -50,14 +51,18 @@ export async function executeTool(
   name: string,
   args: Record<string, unknown>,
 ): Promise<unknown> {
-  if (!(name in schemas)) return { error: 'Unknown tool.' };
+  if (!(name in schemas)) {
+    return { error: 'Unknown tool.' };
+  }
   try {
-    if (name === 'list_files')
+    if (name === 'list_files') {
       return {
         files: await listFiles(root, schemas.list_files.parse(args).limit),
       };
-    if (name === 'read_file')
+    }
+    if (name === 'read_file') {
       return { content: await readFile(root, schemas.read_file.parse(args)) };
+    }
     return {
       matches: await searchCode(
         root,

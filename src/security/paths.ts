@@ -1,6 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { CodeHarnessError } from '../utils/errors.js';
+
 export const excludedNames = new Set([
   '.env',
   '.env.local',
@@ -31,24 +32,27 @@ export function isExcluded(relative: string): boolean {
     );
 }
 export function safeRelative(root: string, requested: string): string {
-  if (path.isAbsolute(requested))
+  if (path.isAbsolute(requested)) {
     throw new CodeHarnessError(
       'Absolute paths are not allowed.',
       'PATH_OUTSIDE_ROOT',
     );
+  }
   const relative = path.normalize(requested);
   const target = path.resolve(root, relative);
   const base = path.resolve(root);
-  if (target !== base && !target.startsWith(`${base}${path.sep}`))
+  if (target !== base && !target.startsWith(`${base}${path.sep}`)) {
     throw new CodeHarnessError(
       'Path traversal outside the repository is not allowed.',
       'PATH_OUTSIDE_ROOT',
     );
-  if (isExcluded(relative))
+  }
+  if (isExcluded(relative)) {
     throw new CodeHarnessError(
       'This path is excluded because it may contain secrets or generated data.',
       'PATH_EXCLUDED',
     );
+  }
   return relative;
 }
 export async function regularFile(
@@ -57,15 +61,17 @@ export async function regularFile(
 ): Promise<string> {
   const realRoot = await fs.realpath(root);
   const real = await fs.realpath(path.resolve(root, relative));
-  if (real !== realRoot && !real.startsWith(`${realRoot}${path.sep}`))
+  if (real !== realRoot && !real.startsWith(`${realRoot}${path.sep}`)) {
     throw new CodeHarnessError(
       'Symbolic links outside the repository are not allowed.',
       'PATH_OUTSIDE_ROOT',
     );
-  if (!(await fs.stat(real)).isFile())
+  }
+  if (!(await fs.stat(real)).isFile()) {
     throw new CodeHarnessError(
       'The requested path is not a regular file.',
       'NOT_A_FILE',
     );
+  }
   return real;
 }

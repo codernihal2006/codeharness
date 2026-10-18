@@ -5,6 +5,7 @@ import { modelsCommand } from './commands/models.js';
 import { agentCommand } from './commands/agent.js';
 import { startChat } from './commands/chat.js';
 import { userMessage } from './utils/errors.js';
+
 const program = new Command()
   .name('codeharness')
   .description(
@@ -15,13 +16,14 @@ program
   .addCommand(providersCommand())
   .addCommand(modelsCommand())
   .addCommand(agentCommand());
-if (process.argv.length <= 2)
+if (process.argv.length <= 2) {
   startChat().catch((e) => {
     console.error(`Error: ${userMessage(e)}`);
     process.exitCode = 1;
   });
-else
+} else {
   program.parseAsync().catch((e) => {
     console.error(`Error: ${userMessage(e)}`);
     process.exitCode = 1;
   });
+}
